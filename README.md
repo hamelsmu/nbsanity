@@ -15,9 +15,3 @@ open http://127.0.0.1:8000/render/https://github.com/hamelsmu/hamel/blob/master/
 ```
 
 Your browser will redirect you to a rendered quarto notebook!
-
-Another example:
-
-```bash
-open http://127.0.0.1:8000/render/https://github.com/seeM/blog/blob/main/posts/jupyter-server-a-whirlwind-tour.ipynb
-```
