@@ -1,4 +1,8 @@
-## Instructions
+# Quarto Render
+
+Like nbviewer, but for standalone quarto notebooks
+
+## Usage
 
 ### 1. Install depedencies
 
