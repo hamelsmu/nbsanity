@@ -3,7 +3,7 @@
 ### 1. Install depedencies
 
 ```bash
-pip install fastapi "uvicorn[standard]" fastcore
+pip install -U fastapi "uvicorn[standard]" fastcore
 ```
 
 ### 2. Launch app 
