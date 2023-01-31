@@ -1,12 +1,18 @@
 ## Instructions
 
-### 1. Launch app 
+### 1. Install depedencies
+
+```bash
+pip install fastapi "uvicorn[standard]" fastcore
+```
+
+### 2. Launch app 
 
 ```bash
 uvicorn main:app
 ```
 
-### 2. Use the `/render/<github url>` path to render a notebook.
+### 3. Use the `/render/<github url>` path to render a notebook.
 
 For example, if you want to render [this notebook](https://github.com/hamelsmu/hamel/blob/master/notes/serving/tfserving/tf-serving-basics.ipynb), you would navigate to this URL:
 
