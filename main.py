@@ -1,18 +1,13 @@
-from shutil import copytree
+import tempfile, hashlib, shutil
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
-import tempfile
-from fastcore.xtras import run, mkdir, Path
-from fastcore.net import urlsave
-import hashlib
+from fastcore.all import run, mkdir, Path, urlsave
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-def git2raw(git_url: str):
-    "Convert a git url to a raw url"
-    return git_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
+def git2raw(git_url: str): return git_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
 
 @app.get("/render/{file_path:path}")
 async def render(file_path: str):
@@ -25,8 +20,7 @@ async def render(file_path: str):
         if not new_path.exists():
             run(f"quarto render {nm} --to html")
             mkdir(f'static/{hash}', exist_ok=True, overwrite=True)
-            copytree(d, f'static/{hash}', dirs_exist_ok=True)
+            shutil.copytree(d, f'static/{hash}', dirs_exist_ok=True)
 
-    #redirect to static file
     fname = nm.with_suffix('.html').name
     return RedirectResponse(f'/static/{hash}/{fname}')
