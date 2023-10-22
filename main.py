@@ -56,14 +56,14 @@ def generate_instruction_content():
         <p>Welcome to the Notebook Renderer! Here's how to use this service:</p>
         <ol>
             <li>Find the GitHub URL of the notebook you wish to render.</li>
-            <li>Replace <code>github.com</code> in the URL with <code>nbsanity.com</code>.</li>
+            <li>Replace <span style="color: red;"><code>github.com</code></span> in the URL with <span style="color: red;"><code>nbsanity.com</code></span>.</li>
             <li>Enter the modified URL in your browser.</li>
         </ol>
         <p>For example:</p>
         <p>If you have the notebook URL as:</p>
-        <code>https://github.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</code>
+        <code>https://<span style="color: red;">github.com</span>/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</code>
         <p>Modify it to:</p>
-        <code><a href="https://nbsanity.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb">https://nbsanity.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</a></code>
+        <code><a href="https://nbsanity.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb">https://<span style="color: red;">nbsanity.com</span>/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</a></code>
     </body>
     </html>
     '''
@@ -106,3 +106,10 @@ def handle_http_error(e, full_url):
     if e.code == 404:
         return HTMLResponse(content=f'<p>Error: The notebook {full_url} was not found on GitHub. Please check the path and try again.</p>')
     return HTMLResponse(content=f'<p>An error occurred while fetching the notebook {full_url}: {e}</p>')
+
+def highlight_domain(text: str) -> str:
+    """Highlights specific domains in the given text."""
+    domains = ['nbsanity.com', 'github.com']
+    for domain in domains:
+        text = text.replace(domain, f'<span style="color: red;">{domain}</span>')
+    return text
