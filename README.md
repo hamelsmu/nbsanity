@@ -25,4 +25,3 @@ Run the script [`run_docker.sh`](./run_docker.sh) to build and run the docker im
 ## Usage
 
 You will see instructions on how to use the app on the home page.  If running locally, you should substitute `nbsanity.com` with `localhost:<PORT>` in the instructions.
-
