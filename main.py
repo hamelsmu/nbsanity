@@ -61,9 +61,9 @@ def generate_instruction_content():
         </ol>
         <p>For example:</p>
         <p>If you have the notebook URL as:</p>
-        <code>https://<span style="color: red;">github.com</span>/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</code>
+        <code>https://<span style="color: red;">github</span>.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</code>
         <p>Modify it to:</p>
-        <code><a href="https://nbsanity.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb">https://<span style="color: red;">nbsanity.com</span>/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</a></code>
+        <code><a href="https://nbsanity.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb">https://<span style="color: red;">nbsanity</span>.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</a></code>
     </body>
     </html>
     '''
