@@ -86,7 +86,7 @@ async def serve_notebook(file_path):
     with tempfile.TemporaryDirectory() as d:
         full_url = 'https://github.com/' + file_path
         try:
-            nm = urlsave(git2raw(full_url))
+            nm = urlsave(git2raw(full_url), d)
         except urllib.error.HTTPError as e:
             return handle_http_error(e, full_url)
         
