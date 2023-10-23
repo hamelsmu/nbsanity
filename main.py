@@ -1,4 +1,4 @@
-import tempfile, hashlib, shutil
+import tempfile, hashlib, shutil, json
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -92,6 +92,17 @@ async def serve_notebook(file_path):
         
         hash_val = hashlib.md5(open(nm,'rb').read()).hexdigest()
         new_path = Path(f'static/{hash_val}')
+
+        # Load the notebook and modify non-compliant Quarto comments
+        with open(nm, 'r') as f:
+            notebook_data = json.load(f)
+            for cell in notebook_data['cells']:
+                if cell['cell_type'] == 'code':
+                    cell['source'] = escape_quarto_comments(cell['source'])
+        
+        # Save the modified notebook
+        with open(nm, 'w') as f:
+            json.dump(notebook_data, f)
         
         if not new_path.exists():
             run(f"quarto render {nm} --no-execute --to html")
@@ -113,3 +124,10 @@ def highlight_domain(text: str) -> str:
     for domain in domains:
         text = text.replace(domain, f'<span style="color: red;">{domain}</span>')
     return text
+
+def escape_quarto_comments(lines):
+    """Escape comments that don't match Quarto's directive format."""
+    for idx, line in enumerate(lines):
+        if line.strip().startswith('#|') and ':' not in line:
+            lines[idx] = '#' + line
+    return lines
