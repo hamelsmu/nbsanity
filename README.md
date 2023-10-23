@@ -11,6 +11,8 @@ First, install dependencies:
 ```bash
 pip install -U fastapi "uvicorn[standard]" fastcore
 ```
+
+Also, [install Quarto](https://quarto.org/docs/get-started/).
     
 Then, run the app:
 
