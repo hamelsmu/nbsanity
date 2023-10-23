@@ -1,6 +1,6 @@
 # nbsanity
 
-Like nbviewer, but for standalone quarto notebooks
+Like nbviewer, but uses [Quarto](https://quarto.org/) as the renderer.
 
 ## Setup
 
