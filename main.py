@@ -28,6 +28,7 @@ def generate_instruction_content():
     <html>
     <head>
         <title>Instructions</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
         <style>
             body {
                 font-family: Arial, sans-serif;
@@ -49,6 +50,16 @@ def generate_instruction_content():
             a:hover {
                 text-decoration: underline;
             }
+            footer {
+                margin-top: 30px;
+                border-top: 1px solid #ccc;
+                padding-top: 10px;
+                font-size: 0.8em;  /* Make the font size smaller */
+                color: grey;        /* Change the text color to grey */
+            }
+            footer a {
+                color: #4682B4;
+            }
         </style>
     </head>
     <body>
@@ -56,14 +67,16 @@ def generate_instruction_content():
         <p>Welcome to the Notebook Renderer! Here's how to use this service:</p>
         <ol>
             <li>Find the GitHub URL of the notebook you wish to render.</li>
-            <li>Replace <span style="color: red;"><code>github.com</code></span> in the URL with <span style="color: red;"><code>nbsanity.com</code></span>.</li>
-            <li>Enter the modified URL in your browser.</li>
+            <li>Replace <span style="color: red;"><code>github.com</code></span> in the URL with <span style="color: red;"><code>nbsanity.com</code></span> in your browser.</li>
         </ol>
         <p>For example:</p>
-        <p>If you have the notebook URL as:</p>
+        <p>For the notebook URL:</p>
         <code>https://<span style="color: red;">github</span>.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</code>
         <p>Modify it to:</p>
         <code><a href="https://nbsanity.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb">https://<span style="color: red;">nbsanity</span>.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</a></code>
+        <footer>
+            <p>Made by <a href="https://hamel.dev">Hamel</a>
+        </footer>
     </body>
     </html>
     '''
