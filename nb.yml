@@ -3,7 +3,4 @@ format:
     embed-resources: true
     self-contained-math: true
     toc: true
-    code-fold: "show"
-    code-tools: 
-      toggle: true
-    
+
