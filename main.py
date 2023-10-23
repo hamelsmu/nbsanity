@@ -118,7 +118,7 @@ async def serve_notebook(file_path):
             json.dump(notebook_data, f)
         
         if not new_path.exists():
-            run(f"quarto render {nm} --no-execute --to html")
+            run(f"quarto render {nm} --no-execute --to html --metadata-file nb.yml")
             mkdir(new_path, exist_ok=True, overwrite=True)
             shutil.copytree(d, str(new_path), dirs_exist_ok=True)
 
