@@ -99,7 +99,8 @@ async def serve_notebook(file_path):
     with tempfile.TemporaryDirectory() as d:
         full_url = 'https://github.com/' + file_path
         try:
-            nm = urlsave(git2raw(full_url), d)
+            raw_url = git2raw(full_url)
+            nm = urlsave(raw_url, d)
         except urllib.error.HTTPError as e:
             return handle_http_error(e, full_url)
         
@@ -112,7 +113,27 @@ async def serve_notebook(file_path):
             for cell in notebook_data['cells']:
                 if cell['cell_type'] == 'code':
                     cell['source'] = escape_quarto_comments(cell['source'])
+
+
+        # get just the notebook name
+        nb_name = Path(nm).name
         
+        # make a new cell for the download link
+        download_cell = {
+            "attachments": {},
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                '<div style="text-align: right;">'
+                f'<a href="{raw_url}" download="{nb_name}" target="_blank">Download Notebook</a>'
+                '\n</div>'
+            ]
+        }
+
+        # Add the download cell to the notebook
+        notebook_data['cells'].insert(0, download_cell)
+
+
         # Save the modified notebook
         with open(nm, 'w') as f:
             json.dump(notebook_data, f)
