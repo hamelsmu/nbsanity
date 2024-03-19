@@ -34,14 +34,15 @@ You will see instructions on how to use the app on the home page.  If running lo
 
 ## For Hamel
 
-To launch to dokku, add the remote:
+To launch to [dokku](https://hamel.dev/blog/posts/dokku/), add the remote:
 
 ```bash
-git remote add dokku dokku@nbsanity:q
+git remote add prod dokku@nbsanity:q
 ```
 
 Then, push to the remote:
 
 ```bash
+ssh dokku@nbsanity repo:purge-cache q
 git push prod
 ```
