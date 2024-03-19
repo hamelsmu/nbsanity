@@ -22,44 +22,46 @@ async def render(file_path: str = ''):
         return HTMLResponse(content=generate_error_content(file_path))
     return await serve_notebook(file_path)
 
+NOTEBOOK_PATH="meta-llama/llama-recipes/blob/main/recipes/finetuning/huggingface_trainer/peft_finetuning.ipynb"
+
 def generate_instruction_content():
     """Generate styled HTML content for instructions."""
-    return '''
+    return f'''
     <html>
     <head>
         <title>Instructions</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
         <style>
-            body {
+            body {{
                 font-family: Arial, sans-serif;
                 padding: 20px;
                 line-height: 1.6;
-            }
-            h1 {
+            }}
+            h1 {{
                 color: #2E8B57;
-            }
-            code {
+            }}
+            code {{
                 background-color: #F5F5F5;
                 padding: 2px 5px;
                 border-radius: 3px;
-            }
-            a {
+            }}
+            a {{
                 color: #4682B4;
                 text-decoration: none;
-            }
-            a:hover {
+            }}
+            a:hover {{
                 text-decoration: underline;
-            }
-            footer {
+            }}
+            footer {{
                 margin-top: 30px;
                 border-top: 1px solid #ccc;
                 padding-top: 10px;
                 font-size: 0.8em;  /* Make the font size smaller */
                 color: grey;        /* Change the text color to grey */
-            }
-            footer a {
+            }}
+            footer a {{
                 color: #4682B4;
-            }
+            }}
         </style>
     </head>
     <body>
@@ -71,9 +73,9 @@ def generate_instruction_content():
         </ol>
         <p>For example:</p>
         <p>For the notebook URL:</p>
-        <code>https://<span style="color: red;">github</span>.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</code>
+        <code>https://<span style="color: red;">github</span>.com/{NOTEBOOK_PATH}</code>
         <p>Modify it to:</p>
-        <code><a href="https://nbsanity.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb">https://<span style="color: red;">nbsanity</span>.com/facebookresearch/llama-recipes/blob/main/examples/quickstart.ipynb</a></code>
+        <code><a href="https://nbsanity.com/{NOTEBOOK_PATH}">https://<span style="color: red;">nbsanity</span>.com/{NOTEBOOK_PATH}</a></code>
         <footer>
             <p>Made by <a href="https://hamel.dev">Hamel</a>
         </footer>

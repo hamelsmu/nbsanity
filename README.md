@@ -2,6 +2,10 @@
 
 Like nbviewer, but uses [Quarto](https://quarto.org/) as the renderer.
 
+## Try It
+
+[https://nbssanity.com](https://nbssanity.com)
+
 ## Setup
 
 ### Local development
