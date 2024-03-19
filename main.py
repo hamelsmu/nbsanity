@@ -22,7 +22,7 @@ async def render(file_path: str = ''):
         return HTMLResponse(content=generate_error_content(file_path))
     return await serve_notebook(file_path)
 
-NOTEBOOK_PATH="meta-llama/llama-recipes/blob/main/recipes/finetuning/huggingface_trainer/peft_finetuning.ipynb"
+NOTEBOOK_PATH="jakevdp/PythonDataScienceHandbook/blob/master/notebooks/01.07-Timing-and-Profiling.ipynb"
 
 def generate_instruction_content():
     """Generate styled HTML content for instructions."""
