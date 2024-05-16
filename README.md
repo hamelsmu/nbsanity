@@ -4,7 +4,7 @@ Like nbviewer, but uses [Quarto](https://quarto.org/) as the renderer.
 
 ## Try It
 
-[https://nbssanity.com](https://nbssanity.com)
+[https://nbsanity.com](https://nbsanity.com)
 
 ## Setup
 
