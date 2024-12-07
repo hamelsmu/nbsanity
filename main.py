@@ -61,6 +61,24 @@ GIST_PATH="arfon/295dcd8636b7659fcbb9"
 
 def generate_instruction_content():
     """Generate styled HTML content for instructions."""
+    # Minified bookmarklet code
+    bookmarklet_code = """javascript:(function(){if(!location.hostname.includes('github.com')||!location.href.endsWith('.ipynb')){alert('Please use this bookmarklet on a GitHub or Gist notebook URL (.ipynb file)');window.open('https://nbsanity.com','_blank');return;}const newUrl=location.href.replace(location.hostname,location.hostname.includes('gist')?'nbsanity.com/gist':'nbsanity.com');window.open(newUrl,'_blank');})();"""
+    
+    # Readable bookmarklet code for display
+    readable_code = """javascript:(function() {
+    /* Validate URL */
+    if (!location.hostname.includes('github.com') || !location.href.endsWith('.ipynb')) {
+        alert('Please use this bookmarklet on a GitHub or Gist notebook URL (.ipynb file)');
+        window.open('https://nbsanity.com', '_blank');
+        return;
+    }
+
+    /* Replace hostname and open */
+    const newUrl = location.href.replace(location.hostname, 
+                                       location.hostname.includes('gist') ? 'nbsanity.com/gist' : 'nbsanity.com');
+    window.open(newUrl, '_blank');
+})();"""
+
     return f'''
     <html>
     <head>
@@ -72,13 +90,19 @@ def generate_instruction_content():
                 padding: 20px;
                 line-height: 1.6;
             }}
-            h1 {{
+            h1, h2 {{
                 color: #2E8B57;
             }}
             code {{
                 background-color: #F5F5F5;
                 padding: 2px 5px;
                 border-radius: 3px;
+            }}
+            pre {{
+                background-color: #F5F5F5;
+                padding: 15px;
+                border-radius: 5px;
+                overflow-x: auto;
             }}
             a {{
                 color: #4682B4;
@@ -87,44 +111,77 @@ def generate_instruction_content():
             a:hover {{
                 text-decoration: underline;
             }}
+            .bookmarklet {{
+                display: inline-block;
+                padding: 8px 15px;
+                background-color: #4682B4;
+                color: white;
+                border-radius: 5px;
+                margin: 10px 0;
+            }}
+            .bookmarklet:hover {{
+                background-color: #3B6E8F;
+                text-decoration: none;
+            }}
             footer {{
                 margin-top: 30px;
                 border-top: 1px solid #ccc;
                 padding-top: 10px;
-                font-size: 0.8em;  /* Make the font size smaller */
-                color: grey;        /* Change the text color to grey */
+                font-size: 0.8em;
+                color: grey;
             }}
             footer a {{
                 color: #4682B4;
+            }}
+            .method-section {{
+                border: 1px solid #ddd;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
             }}
         </style>
     </head>
     <body>
         <h1>Notebook Renderer Instructions</h1>
-        <p>Welcome to the Notebook Renderer! Here's how to use this service:</p>
-        <ol>
-            <li>Find the GitHub URL of the notebook or gist you wish to render.</li>
-            <li>Modify the URL in your browser:</li>
-            <ul>
-                <li><strong>For Notebooks in Repos:</strong> Replace <span style="color: red;"><code>github.com</code></span> with <span style="color: red;"><code>nbsanity.com</code></span>.</li>
-                <li><strong>For Gists:</strong> Replace <span style="color: red;"><code>gist.github.com</code></span> with <span style="color: red;"><code>nbsanity.com/gist</code></span>.</li>
-            </ul>
-        </ol>
-        <h3>Examples:</h3>
-        <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-            <p><strong>Notebook URL: </strong><code>https://<span style="color: red;">github</span>.com/{NOTEBOOK_PATH}</code></p>
-            <p>Modify it to: <code><a href="https://nbsanity.com/{NOTEBOOK_PATH}">https://<span style="color: red;">nbsanity</span>.com/{NOTEBOOK_PATH}</a></code></p>
+        <p>Welcome to the Notebook Renderer! You can use this service in two ways:</p>
+
+        <div class="method-section">
+            <h2>Option 1: Bookmarklet (Recommended)</h2>
+            <p>Drag this button to your bookmarks bar: <a class="bookmarklet" href="{bookmarklet_code}">NBSanity Viewer</a></p>
+            <p>Then, while viewing any .ipynb file on GitHub or Gist, click the bookmarklet to open it in NBSanity.</p>
+            
+            <details>
+                <summary>View bookmarklet source code</summary>
+                <pre><code>{readable_code}</code></pre>
+            </details>
         </div>
-        <div style="border: 1px solid #ccc; padding: 10px;">
-            <p><strong>Gist URL: </strong><code>https://<span style="color: red;">gist.github.com</span>/{GIST_PATH}</code></p>
-            <p>Modify it to: <code><a href="https://nbsanity.com/gist/{GIST_PATH}">https://<span style="color: red;">nbsanity.com/gist</span>/{GIST_PATH}</a></code></p>
+
+        <div class="method-section">
+            <h2>Option 2: Manual URL Modification</h2>
+            <ol>
+                <li>Find the GitHub URL of the notebook or gist you wish to render.</li>
+                <li>Modify the URL in your browser:</li>
+                <ul>
+                    <li><strong>For Notebooks in Repos:</strong> Replace <span style="color: red;"><code>github.com</code></span> with <span style="color: red;"><code>nbsanity.com</code></span>.</li>
+                    <li><strong>For Gists:</strong> Replace <span style="color: red;"><code>gist.github.com</code></span> with <span style="color: red;"><code>nbsanity.com/gist</code></span>.</li>
+                </ul>
+            </ol>
+
+            <h3>Examples:</h3>
+            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+                <p><strong>Notebook URL: </strong><code>https://<span style="color: red;">github</span>.com/{NOTEBOOK_PATH}</code></p>
+                <p>Modify it to: <code><a href="https://nbsanity.com/{NOTEBOOK_PATH}">https://<span style="color: red;">nbsanity</span>.com/{NOTEBOOK_PATH}</a></code></p>
+            </div>
+            <div style="border: 1px solid #ccc; padding: 10px;">
+                <p><strong>Gist URL: </strong><code>https://<span style="color: red;">gist.github.com</span>/{GIST_PATH}</code></p>
+                <p>Modify it to: <code><a href="https://nbsanity.com/gist/{GIST_PATH}">https://<span style="color: red;">nbsanity.com/gist</span>/{GIST_PATH}</a></code></p>
+            </div>
         </div>
         <hr>
         <p><strong>Made by <a href="https://hamel.dev">Hamel Husain</a></strong></p>
     </body>
     </html>
     '''
-
 
 def generate_error_content(file_path, gist=False):
     """Generate HTML content for errors."""
