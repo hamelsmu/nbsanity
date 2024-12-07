@@ -1,4 +1,5 @@
 import tempfile, hashlib, shutil, json
+import requests
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -10,26 +11,60 @@ import urllib.error
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+def gist_raw(gist_url):
+    # Extract gist ID from URL
+    gist_id = gist_url.split('/')[-1]
+    
+    # Get gist info from GitHub API
+    api_url = f"https://api.github.com/gists/{gist_id}"
+    response = requests.get(api_url)
+    data = response.json()
+    
+    # Check if 'files' or 'raw_url' is missing and raise HTTPError
+    if 'files' not in data or not data['files']:
+        raise urllib.error.HTTPError(api_url, 404, "No files found in the gist", None, None)
+    
+    raw_url = list(data['files'].values())[0].get('raw_url')
+    if not raw_url:
+        raise urllib.error.HTTPError(api_url, 404, "No raw_url found for the file", None, None)
+    
+    return raw_url
+
 def git2raw(git_url: str): 
+    if git_url.startswith('https://gist.github.com/'): return gist_raw(git_url)
+    if git_url.startswith('https://gist.githubusercontent.com') and 'raw' in git_url: return git_url
     return git_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
+
 
 @app.get("/{file_path:path}")
 async def render(file_path: str = ''):
     """Render the notebook or display instructions."""
     if not file_path:
         return HTMLResponse(content=generate_instruction_content())
+    if file_path.startswith('gist/'): return await render_gist(file_path)
     if not file_path.endswith('.ipynb'):
         return HTMLResponse(content=generate_error_content(file_path))
     return await serve_notebook(file_path)
 
+
+async def render_gist(gist_path: str=''):
+    """Render a gist."""
+    print("This is the gist path:", gist_path)
+    gist_path = gist_path.lstrip('gist/')
+    try: raw_gist_url = git2raw(f'https://gist.github.com/{gist_path}')
+    except urllib.error.HTTPError as e: return handle_http_error(e, f'https://gist.github.com/{gist_path}')
+    if not raw_gist_url.endswith('.ipynb'): return HTMLResponse(content=generate_error_content(gist_path, gist=True))
+    return await serve_notebook(gist_path, gist=True)
+    
 NOTEBOOK_PATH="jakevdp/PythonDataScienceHandbook/blob/master/notebooks/01.07-Timing-and-Profiling.ipynb"
+GIST_PATH="arfon/295dcd8636b7659fcbb9"
 
 def generate_instruction_content():
     """Generate styled HTML content for instructions."""
     return f'''
     <html>
     <head>
-        <title>Instructions</title>
+        <title>nbsanity</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
         <style>
             body {{
@@ -68,38 +103,46 @@ def generate_instruction_content():
         <h1>Notebook Renderer Instructions</h1>
         <p>Welcome to the Notebook Renderer! Here's how to use this service:</p>
         <ol>
-            <li>Find the GitHub URL of the notebook you wish to render.</li>
-            <li>Replace <span style="color: red;"><code>github.com</code></span> in the URL with <span style="color: red;"><code>nbsanity.com</code></span> in your browser.</li>
+            <li>Find the GitHub URL of the notebook or gist you wish to render.</li>
+            <li>Modify the URL in your browser:</li>
+            <ul>
+                <li><strong>For Notebooks in Repos:</strong> Replace <span style="color: red;"><code>github.com</code></span> with <span style="color: red;"><code>nbsanity.com</code></span>.</li>
+                <li><strong>For Gists:</strong> Replace <span style="color: red;"><code>gist.github.com</code></span> with <span style="color: red;"><code>nbsanity.com/gist</code></span>.</li>
+            </ul>
         </ol>
-        <p>For example:</p>
-        <p>For the notebook URL:</p>
-        <code>https://<span style="color: red;">github</span>.com/{NOTEBOOK_PATH}</code>
-        <p>Modify it to:</p>
-        <code><a href="https://nbsanity.com/{NOTEBOOK_PATH}">https://<span style="color: red;">nbsanity</span>.com/{NOTEBOOK_PATH}</a></code>
-        <footer>
-            <p>Made by <a href="https://hamel.dev">Hamel</a>
-        </footer>
+        <h3>Examples:</h3>
+        <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+            <p><strong>Notebook URL: </strong><code>https://<span style="color: red;">github</span>.com/{NOTEBOOK_PATH}</code></p>
+            <p>Modify it to: <code><a href="https://nbsanity.com/{NOTEBOOK_PATH}">https://<span style="color: red;">nbsanity</span>.com/{NOTEBOOK_PATH}</a></code></p>
+        </div>
+        <div style="border: 1px solid #ccc; padding: 10px;">
+            <p><strong>Gist URL: </strong><code>https://<span style="color: red;">gist.github.com</span>/{GIST_PATH}</code></p>
+            <p>Modify it to: <code><a href="https://nbsanity.com/gist/{GIST_PATH}">https://<span style="color: red;">nbsanity.com/gist</span>/{GIST_PATH}</a></code></p>
+        </div>
+        <hr>
+        <p><strong>Made by <a href="https://hamel.dev">Hamel Husain</a></strong></p>
     </body>
     </html>
     '''
 
 
-def generate_error_content(file_path):
+def generate_error_content(file_path, gist=False):
     """Generate HTML content for errors."""
+    back = f'<a href="https://github.com/{file_path}">Go back to GitHub</a>' if not gist else f'<a href="https://gist.github.com/{file_path}">Go back to Gist</a>'
     return f"""
     <html>
     <head><title>Error</title></head>
     <body>
     <p>{file_path} is not a notebook.</p>
-    <a href="https://github.com/{file_path}">Go back to GitHub</a>
+    {back}
     </body>
     </html>
     """
 
-async def serve_notebook(file_path):
+async def serve_notebook(file_path, gist=False):
     """Fetch, render, and serve the notebook."""
     with tempfile.TemporaryDirectory() as d:
-        full_url = 'https://github.com/' + file_path
+        full_url = 'https://github.com/' + file_path if not gist else 'https://gist.github.com/' + file_path
         try:
             nm = urlsave(git2raw(full_url), d)
         except urllib.error.HTTPError as e:
@@ -120,7 +163,7 @@ async def serve_notebook(file_path):
             json.dump(notebook_data, f)
         
         if not new_path.exists():
-            run(f"quarto render {nm} --no-execute --to html --metadata-file nb.yml")
+            run(f'quarto render {nm} --no-execute --to html -M subtitle:"Rendered from:  {full_url}" --metadata-file nb.yml')
             mkdir(new_path, exist_ok=True, overwrite=True)
             shutil.copytree(d, str(new_path), dirs_exist_ok=True)
 
