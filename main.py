@@ -190,7 +190,7 @@ window.open(newUrl, '_blank');
 
         <div class="method-section">
             <h2><i class="fas fa-link"></i> Option 2: Modify The URL</h2>
-            <p>Modify any GitHub notebook URL to use NBSanity:</p>
+            <p>Modify any GitHub notebook URL to use nbsanity:</p>
             
             <div class="example-box">
                 <h3>For Repository Notebooks:</h3>
