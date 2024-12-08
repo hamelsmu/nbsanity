@@ -1,5 +1,6 @@
 import tempfile, hashlib, shutil, json
 import requests, os
+import nbformat
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse
@@ -247,6 +248,11 @@ def update_title(html_path: str|Path, default_title: str = "nbsanity | Jupyter N
     if meta_tag := soup.find('meta', property='og:title'): meta_tag['content'] = title
     doc.write_text(str(soup), encoding='utf-8')
 
+def fix_nb(nbpath):
+    "Mutate notebook to right version for Quarto."
+    nb = nbformat.read(nbpath, as_version=4)
+    nbformat.write(nb, nbpath)
+
 async def serve_notebook(file_path, gist=False):
     """Fetch, render, and serve the notebook."""
     with tempfile.TemporaryDirectory() as d:
@@ -260,6 +266,7 @@ async def serve_notebook(file_path, gist=False):
         hash_val = hashlib.md5(open(nm,'rb').read()).hexdigest()
         new_path = Path(f'static/{hash_val}')
 
+        fix_nb(nm)
         # Load the notebook and modify non-compliant Quarto comments
         with open(nm, 'r') as f:
             notebook_data = json.load(f)
