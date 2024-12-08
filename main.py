@@ -1,10 +1,9 @@
 import tempfile, hashlib, shutil, json
 import requests, os
-from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse
-from fastcore.utils import run, mkdir
+from fastcore.utils import run, mkdir, Path
 from fastcore.net import urlsave
 import urllib.error
 from rjsmin import jsmin
