@@ -62,22 +62,22 @@ GIST_PATH="arfon/295dcd8636b7659fcbb9"
 def generate_instruction_content():
     """Generate styled HTML content for instructions."""
     # Minified bookmarklet code
-    bookmarklet_code = """javascript:(function(){if(!location.hostname.includes('github.com')||!location.href.endsWith('.ipynb')){alert('Please use this bookmarklet on a GitHub or Gist notebook URL (.ipynb file)');window.open('https://nbsanity.com','_blank');return;}const newUrl=location.href.replace(location.hostname,location.hostname.includes('gist')?'nbsanity.com/gist':'nbsanity.com');window.open(newUrl,'_blank');})();"""
+    bookmarklet_code = """javascript:(function(e){if(!location.hostname.includes('github.com')||!location.href.endsWith('.ipynb'))if(!location.hostname.includes('gist.github.com')){alert('Please use this bookmarklet on a GitHub notebook URL (.ipynb file) or a Gist URL');e.preventDefault();return}window.open(location.href.replace(location.hostname,location.hostname.includes('gist.github.com')?'nbsanity.com/gist':'nbsanity.com'),'_blank')})(event);"""
     
     # Readable bookmarklet code for display
-    readable_code = """javascript:(function() {
-    /* Validate URL */
-    if (!location.hostname.includes('github.com') || !location.href.endsWith('.ipynb')) {
-        alert('Please use this bookmarklet on a GitHub or Gist notebook URL (.ipynb file)');
-        window.open('https://nbsanity.com', '_blank');
+    readable_code = """javascript:(function(e) {
+    if ((!location.hostname.includes('github.com') || !location.href.endsWith('.ipynb')) && 
+        !location.hostname.includes('gist.github.com')
+    ) {
+        alert('Please use this bookmarklet on a GitHub notebook URL (.ipynb file) or a Gist URL');
+        e.preventDefault();
         return;
     }
 
-    /* Replace hostname and open */
     const newUrl = location.href.replace(location.hostname, 
-                                       location.hostname.includes('gist') ? 'nbsanity.com/gist' : 'nbsanity.com');
+                                       location.hostname.includes('gist.github.com') ? 'nbsanity.com/gist' : 'nbsanity.com');
     window.open(newUrl, '_blank');
-})();"""
+})(event);"""
 
     return f'''
     <html>
