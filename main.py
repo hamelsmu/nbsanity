@@ -1,5 +1,5 @@
 import tempfile, hashlib, shutil, json
-import requests, os, re
+import requests, os
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
