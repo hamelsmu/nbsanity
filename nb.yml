@@ -15,7 +15,6 @@ format:
           <meta property="og:image" content="{{image_path}}">
           <meta name="twitter:creator" content="@HamelHusain">
           <meta name="twitter:site" content="@HamelHusain">
-          <meta name="twitter:card" content="summary_large_image">
           <meta property="og:image:height" content="630">
           <meta property="og:image:width" content="1120">
 
