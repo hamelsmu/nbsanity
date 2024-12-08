@@ -1,5 +1,5 @@
 import tempfile, hashlib, shutil, json
-import requests
+import requests, os
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -8,6 +8,7 @@ from fastcore.utils import run, mkdir
 from fastcore.net import urlsave
 import urllib.error
 from rjsmin import jsmin
+from bs4 import BeautifulSoup as bs
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -89,7 +90,7 @@ window.open(newUrl, '_blank');
     <head>
         <title>nbsanity</title>
         <meta property="og:title" content="nbsanity | Jupyter Notebook Viewer" />
-        <meta property="og:description" content="A modern way to render and view Jupyter notebooks directly from GitHub" />
+        <meta property="og:description" content="A modern way to view public Jupyter notebooks on GitHub" />
         <meta property="og:image" content="https://nbsanity.com/assets/nbsanity.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="https://nbsanity.com/assets/nbsanity.png" />
@@ -227,6 +228,20 @@ def generate_error_content(file_path, gist=False):
     </html>
     """
 
+def process_nb_yml(notebook_path, full_url, hash_val):
+    with open('nb.yml', 'r') as f: template = f.read()
+    filled = template.replace('{{full_url}}', full_url).replace('{{image_path}}', f'https://nbsanity.com/static/{hash_val}/cover.png')
+    output_path = os.path.join(notebook_path, 'nb.yml')
+    with open(output_path, 'w') as f: f.write(filled)
+
+def update_title(html_path: str|Path, default_title: str = "nbsanity | Jupyter Notebook Viewer"):
+    "Update the title in the HTML file."
+    doc = Path(html_path)
+    soup = bs(doc.read_text(encoding='utf-8'), 'html.parser')
+    title = soup.title.string if soup.title else default_title
+    if meta_tag := soup.find('meta', property='og:title'): meta_tag['content'] = title
+    doc.write_text(str(soup), encoding='utf-8')
+
 async def serve_notebook(file_path, gist=False):
     """Fetch, render, and serve the notebook."""
     with tempfile.TemporaryDirectory() as d:
@@ -250,13 +265,16 @@ async def serve_notebook(file_path, gist=False):
         with open(nm, 'w') as f:
             json.dump(notebook_data, f)
         
-        if not new_path.exists():
-            run(f'quarto render {nm} --no-execute --to html -M subtitle:"Rendered from:  {full_url}" --metadata-file nb.yml')
-            mkdir(new_path, exist_ok=True, overwrite=True)
-            shutil.copytree(d, str(new_path), dirs_exist_ok=True)
-
         fname = nm.with_suffix('.html').name
-        return RedirectResponse(f'/static/{hash_val}/{fname}')
+        if not new_path.exists():
+            mkdir(new_path, exist_ok=True, overwrite=True)
+            process_nb_yml(new_path, full_url, hash_val)
+            run(f'quarto render {nm} --no-execute --to html --metadata-file {new_path}/nb.yml')
+            shutil.copytree(d, str(new_path), dirs_exist_ok=True)
+            update_title(f'{new_path}/{fname}')
+            run(f'shot-scraper {new_path}/{fname} -o {new_path}/cover.png -w 1024 -h 512')
+        
+        return RedirectResponse(f'/{new_path}/{fname}')
 
 def handle_http_error(e, full_url):
     """Handle HTTP errors during notebook fetch."""
