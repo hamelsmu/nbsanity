@@ -1,5 +1,5 @@
 import tempfile, hashlib, shutil, json
-import requests, os
+import requests, os, re
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -8,6 +8,7 @@ from fastcore.utils import run, mkdir
 from fastcore.net import urlsave
 import urllib.error
 from rjsmin import jsmin
+from bs4 import BeautifulSoup as bs
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -233,6 +234,14 @@ def process_nb_yml(notebook_path, full_url, hash_val):
     output_path = os.path.join(notebook_path, 'nb.yml')
     with open(output_path, 'w') as f: f.write(filled)
 
+def update_title(html_path: str|Path, default_title: str = "nbsanity | Jupyter Notebook Viewer"):
+    "Update the title in the HTML file."
+    doc = Path(html_path)
+    soup = bs(doc.read_text(encoding='utf-8'), 'html.parser')
+    title = soup.title.string if soup.title else default_title
+    if meta_tag := soup.find('meta', property='og:title'): meta_tag['content'] = title
+    doc.write_text(str(soup), encoding='utf-8')
+
 async def serve_notebook(file_path, gist=False):
     """Fetch, render, and serve the notebook."""
     with tempfile.TemporaryDirectory() as d:
@@ -260,12 +269,12 @@ async def serve_notebook(file_path, gist=False):
         if not new_path.exists():
             mkdir(new_path, exist_ok=True, overwrite=True)
             process_nb_yml(new_path, full_url, hash_val)
-            print(f'New path: {new_path}/nb.yml')
             run(f'quarto render {nm} --no-execute --to html --metadata-file {new_path}/nb.yml')
             shutil.copytree(d, str(new_path), dirs_exist_ok=True)
-            run(f'shot-scraper static/{hash_val}/{fname} -o static/{hash_val}/cover.png -w 1024 -h 512')
+            update_title(f'{new_path}/{fname}')
+            run(f'shot-scraper {new_path}/{fname} -o {new_path}/cover.png -w 1024 -h 512')
         
-        return RedirectResponse(f'/static/{hash_val}/{fname}')
+        return RedirectResponse(f'/{new_path}/{fname}')
 
 def handle_http_error(e, full_url):
     """Handle HTTP errors during notebook fetch."""
