@@ -228,6 +228,12 @@ def generate_error_content(file_path, gist=False):
     </html>
     """
 
+def escape_filename(filename):
+    "Replace HTML-like characters and other problematic characters"
+    invalid_chars = '<>:"/\\|?*%#&{}+=`@!^;[]()$'
+    for char in invalid_chars:
+        filename = filename.replace(char, '_')
+    return filename
 def process_nb_yml(notebook_path, full_url, hash_val):
     with open('nb.yml', 'r') as f: template = f.read()
     filled = template.replace('{{full_url}}', full_url).replace('{{image_path}}', f'https://nbsanity.com/static/{hash_val}/cover.png')
@@ -248,6 +254,7 @@ async def serve_notebook(file_path, gist=False):
         full_url = 'https://github.com/' + file_path if not gist else 'https://gist.github.com/' + file_path
         try:
             nm = urlsave(git2raw(full_url), d)
+            nm = nm.rename(nm.parent/escape_filename(nm.name))
         except urllib.error.HTTPError as e:
             return handle_http_error(e, full_url)
         
