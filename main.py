@@ -266,7 +266,8 @@ async def serve_notebook(file_path, gist=False):
         hash_val = hashlib.md5(open(nm,'rb').read()).hexdigest()
         new_path = Path(f'static/{hash_val}')
 
-        fix_nb(nm)
+        try: fix_nb(nm)
+        except Exception as e: return handle_http_error(e, full_url)
         # Load the notebook and modify non-compliant Quarto comments
         with open(nm, 'r') as f:
             notebook_data = json.load(f)
