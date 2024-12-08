@@ -184,7 +184,7 @@ window.open(newUrl, '_blank');
             <h2><i class="fas fa-bookmark"></i> Option 1: Bookmarklet</h2>
             <p>Drag this button to your bookmarks bar:</p>
             <p><a class="bookmarklet" href="{bookmarklet_code}"><img src="/assets/icon.png" style="height: 1em; margin-right: 0.5rem;">nbsanity</a></p>
-            <p>While viewing any .ipynb file on GitHub or Gist, click the bookmarklet to open it in NBSanity.</p>
+            <p>While viewing any .ipynb file on GitHub or Gist, click the bookmarklet to open it in nbsanity.</p>
             <p class="source-link">View source code on <a href="https://github.com/hamelsmu/nbsanity/">GitHub</a></p>
         </div>
 
