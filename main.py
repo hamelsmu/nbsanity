@@ -91,6 +91,10 @@ window.open(newUrl, '_blank');
         <meta property="og:title" content="nbsanity | Jupyter Notebook Viewer" />
         <meta property="og:description" content="A modern way to render and view Jupyter notebooks directly from GitHub" />
         <meta property="og:image" content="https://nbsanity.com/assets/nbsanity.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://nbsanity.com/assets/nbsanity.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content="https://nbsanity.com" />
         <meta property="og:type" content="website" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
