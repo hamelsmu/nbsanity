@@ -6,5 +6,16 @@ format:
     include-before-body:
       - text: |
           <div style="margin-top: 10px; margin-bottom: 10px;">
-            <p><em>Hosted with <a href="https://nbsanity.com" target="_blank">nbsanity</a></em></p>
+            <p><em>Hosted with <a href="https://nbsanity.com" target="_blank">nbsanity</a>. See source notebook <a href="{{full_url}}" target="_blank">on GitHub</a>.</em></p>
           </div>
+    include-in-header:
+      - text: |
+          <meta property="og:title" content="{{title}}" />
+          <meta property="og:description" content="A modern way to view public Jupyter notebooks on GitHub" />
+          <meta property="og:image" content="{{image_path}}" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:image" content="{{image_path}}" />
+          <meta property="og:image:width" content="1024" />
+          <meta property="og:image:height" content="512" />
+          <meta property="og:url" content="https://nbsanity.com" />
+          <meta property="og:type" content="website" />

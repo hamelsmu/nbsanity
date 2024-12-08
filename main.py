@@ -1,5 +1,5 @@
 import tempfile, hashlib, shutil, json
-import requests
+import requests, os
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -89,7 +89,7 @@ window.open(newUrl, '_blank');
     <head>
         <title>nbsanity</title>
         <meta property="og:title" content="nbsanity | Jupyter Notebook Viewer" />
-        <meta property="og:description" content="A modern way to render and view Jupyter notebooks directly from GitHub" />
+        <meta property="og:description" content="A modern way to view public Jupyter notebooks on GitHub" />
         <meta property="og:image" content="https://nbsanity.com/assets/nbsanity.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="https://nbsanity.com/assets/nbsanity.png" />
@@ -227,6 +227,12 @@ def generate_error_content(file_path, gist=False):
     </html>
     """
 
+def process_nb_yml(notebook_path, full_url, hash_val):
+    with open('nb.yml', 'r') as f: template = f.read()
+    filled = template.replace('{{full_url}}', full_url).replace('{{image_path}}', f'https://nbsanity.com/static/{hash_val}/cover.png')
+    output_path = os.path.join(notebook_path, 'nb.yml')
+    with open(output_path, 'w') as f: f.write(filled)
+
 async def serve_notebook(file_path, gist=False):
     """Fetch, render, and serve the notebook."""
     with tempfile.TemporaryDirectory() as d:
@@ -250,12 +256,15 @@ async def serve_notebook(file_path, gist=False):
         with open(nm, 'w') as f:
             json.dump(notebook_data, f)
         
-        if not new_path.exists():
-            run(f'quarto render {nm} --no-execute --to html -M subtitle:"Rendered from:  {full_url}" --metadata-file nb.yml')
-            mkdir(new_path, exist_ok=True, overwrite=True)
-            shutil.copytree(d, str(new_path), dirs_exist_ok=True)
-
         fname = nm.with_suffix('.html').name
+        if not new_path.exists():
+            mkdir(new_path, exist_ok=True, overwrite=True)
+            process_nb_yml(new_path, full_url, hash_val)
+            print(f'New path: {new_path}/nb.yml')
+            run(f'quarto render {nm} --no-execute --to html --metadata-file {new_path}/nb.yml')
+            shutil.copytree(d, str(new_path), dirs_exist_ok=True)
+            run(f'shot-scraper static/{hash_val}/{fname} -o static/{hash_val}/cover.png -w 1024 -h 512')
+        
         return RedirectResponse(f'/static/{hash_val}/{fname}')
 
 def handle_http_error(e, full_url):
