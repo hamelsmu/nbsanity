@@ -13,6 +13,7 @@ format:
           <meta property="og:title" content="{{{title}}}">
           <meta property="og:description" content="nbsanity: A modern way to view public Jupyter notebooks on GitHub" />
           <meta property="og:image" content="{{image_path}}">
+          <meta name=“twitter:card” content=“summary_large_image”>
           <meta name="twitter:creator" content="@HamelHusain">
           <meta name="twitter:site" content="@HamelHusain">
           <meta property="og:image:height" content="630">
