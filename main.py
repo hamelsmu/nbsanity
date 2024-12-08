@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from fastcore.utils import run, mkdir
 from fastcore.net import urlsave
 import urllib.error
+from rjsmin import jsmin
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -62,10 +63,7 @@ GIST_PATH="arfon/295dcd8636b7659fcbb9"
 def generate_instruction_content():
     """Generate styled HTML content for instructions."""
     # Minified bookmarklet code
-    bookmarklet_code = """javascript:(function(e){if(!location.hostname.includes('github.com')||!location.href.endsWith('.ipynb'))if(!location.hostname.includes('gist.github.com')){alert('Please use this bookmarklet on a GitHub notebook URL (.ipynb file) or a Gist URL');e.preventDefault();return}window.open(location.href.replace(location.hostname,location.hostname.includes('gist.github.com')?'nbsanity.com/gist':'nbsanity.com'),'_blank')})(event);"""
-    
-    # Readable bookmarklet code for display
-    readable_code = """javascript:(function(e) {
+    js_code = """javascript:(function(e) {
     if ((!location.hostname.includes('github.com') || !location.href.endsWith('.ipynb')) && 
         !location.hostname.includes('gist.github.com')
     ) {
@@ -75,9 +73,11 @@ def generate_instruction_content():
     }
 
     const newUrl = location.href.replace(location.hostname, 
-                                       location.hostname.includes('gist.github.com') ? 'nbsanity.com/gist' : 'nbsanity.com');
+                                    location.hostname.includes('gist.github.com') ? 'nbsanity.com/gist' : 'nbsanity.com');
     window.open(newUrl, '_blank');
 })(event);"""
+
+    bookmarklet_code = jsmin(js_code)
 
     return f'''
     <html>
@@ -152,7 +152,7 @@ def generate_instruction_content():
             
             <details>
                 <summary>View bookmarklet source code</summary>
-                <pre><code>{readable_code}</code></pre>
+                <pre><code>{js_code}</code></pre>
             </details>
         </div>
 
