@@ -246,7 +246,7 @@ def update_title(html_path: str|Path, default_title: str = "nbsanity | Jupyter N
     soup = bs(doc.read_text(encoding='utf-8'), 'html.parser')
     title = soup.title.string if soup.title else default_title
     if meta_tag := soup.find('meta', property='og:title'): meta_tag['content'] = title
-    if meta_tag := soup.find('meta', name='twitter:title'): meta_tag['content'] = title
+    if meta_tag := soup.find('meta', attrs={'name': 'twitter:title'}): meta_tag['content'] = title
     doc.write_text(str(soup), encoding='utf-8')
 
 def fix_nb(nbpath):
