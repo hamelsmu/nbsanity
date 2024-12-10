@@ -286,17 +286,12 @@ async def serve_notebook(file_path, gist=False):
     d.mkdir(parents=True, exist_ok=True)
     full_url = 'https://github.com/' + file_path if not gist else 'https://gist.github.com/' + file_path
     try:
-        try:
-            nm = urlsave(git2raw(full_url), d)
-            nm = nm.rename(nm.parent/escape_filename(nm.name))
-        except urllib.error.HTTPError as e:
-            return handle_http_error(e, full_url)
+        nm = urlsave(git2raw(full_url), d)
+        nm = nm.rename(nm.parent/escape_filename(nm.name))
         
         hash_val = hashlib.md5(open(nm,'rb').read()).hexdigest()
         new_path = Path(f'static/{hash_val}')
-
-        try: fix_nb(nm)
-        except Exception as e: return handle_http_error(e, full_url)
+        fix_nb(nm)
         # Load the notebook and modify non-compliant Quarto comments
         with open(nm, 'r') as f:
             notebook_data = json.load(f)
@@ -312,20 +307,21 @@ async def serve_notebook(file_path, gist=False):
         if not new_path.exists():
             mkdir(new_path, exist_ok=True, overwrite=True)
             process_nb_yml(new_path, full_url, hash_val)
-            print('file stuff:', run(f'ls -l {nm.parent}'))
-            print('quarto stuff:', f'quarto render "{nm}" --no-execute --to html --metadata-file {new_path}/nb.yml')
-            try: run(f'quarto render "{nm}" --no-execute --to html --metadata-file {new_path}/nb.yml')
-            except OSError as e: raise OSError(f'Failed to render notebook with command: quarto render "{nm}" --no-execute --to html --metadata-file {new_path}/nb.yml\nError: {e}')
-
+            run(f'quarto render "{nm}" --no-execute --to html --metadata-file {new_path}/nb.yml')
             shutil.copytree(d, str(new_path), dirs_exist_ok=True)
             title = get_title(f'{new_path}/{fname}')
             update_meta(f'{new_path}/{fname}', f'https://nbsanity.com/static/{hash_val}/cover.png', title)
             run(f'shot-scraper "{new_path}/{fname}" -o {new_path}/cover.png -w 1200 -h 630')
         shutil.rmtree(d, ignore_errors=True)
         return RedirectResponse(f'/{new_path}/{fname}')
+    
+    except urllib.error.HTTPError as e:
+        shutil.rmtree(new_path, ignore_errors=True)
+        return handle_http_error(e, full_url)
     except Exception as e:
-        shutil.rmtree(d, ignore_errors=True)
+        shutil.rmtree(new_path, ignore_errors=True)
         raise e
+    finally: shutil.rmtree(d, ignore_errors=True)
 
 def handle_http_error(e, full_url):
     """Handle HTTP errors during notebook fetch."""
