@@ -1,5 +1,6 @@
 format: 
   html:
+    code-overflow: wrap
     toc: true
     include-before-body:
       - text: |
