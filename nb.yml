@@ -19,7 +19,7 @@ format:
           <meta property="og:url" content="https://nbsanity.com">
           <meta property="og:title" content="{{{title}}}">
           <meta property="og:description" content="nbsanity: A modern way to view public Jupyter notebooks on GitHub">
-          <meta name="twitter:image" content="{{image_path}}>
+          <meta name="twitter:image" content="{{image_path}}">
           <meta name="twitter:card" content="summary_large_image">
           <meta name="twitter:title" content="{{{title}}}">
           <meta name="twitter:description" content="nbsanity: A modern way to view public Jupyter notebooks on GitHub">
