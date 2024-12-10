@@ -1,4 +1,4 @@
-import tempfile, hashlib, shutil, json
+import hashlib, shutil, json, uuid
 import requests, os
 import nbformat
 from fastapi import FastAPI
@@ -282,8 +282,10 @@ def fix_nb(nbpath):
 
 async def serve_notebook(file_path, gist=False):
     """Fetch, render, and serve the notebook."""
-    with tempfile.TemporaryDirectory() as d:
-        full_url = 'https://github.com/' + file_path if not gist else 'https://gist.github.com/' + file_path
+    d = Path('tmp_notebooks') / str(uuid.uuid4())
+    d.mkdir(parents=True, exist_ok=True)
+    full_url = 'https://github.com/' + file_path if not gist else 'https://gist.github.com/' + file_path
+    try:
         try:
             nm = urlsave(git2raw(full_url), d)
             nm = nm.rename(nm.parent/escape_filename(nm.name))
@@ -310,13 +312,19 @@ async def serve_notebook(file_path, gist=False):
         if not new_path.exists():
             mkdir(new_path, exist_ok=True, overwrite=True)
             process_nb_yml(new_path, full_url, hash_val)
-            run(f'quarto render {nm} --no-execute --to html --metadata-file {new_path}/nb.yml')
+            print('file stuff:', run(f'ls -l {nm.parent}'))
+            print('quarto stuff:', f'quarto render "{nm}" --no-execute --to html --metadata-file {new_path}/nb.yml')
+            try: run(f'quarto render "{nm}" --no-execute --to html --metadata-file {new_path}/nb.yml')
+            except OSError as e: raise OSError(f'Failed to render notebook with command: quarto render "{nm}" --no-execute --to html --metadata-file {new_path}/nb.yml\nError: {e}')
+
             shutil.copytree(d, str(new_path), dirs_exist_ok=True)
             title = get_title(f'{new_path}/{fname}')
             update_meta(f'{new_path}/{fname}', f'https://nbsanity.com/static/{hash_val}/cover.png', title)
-            run(f'shot-scraper {new_path}/{fname} -o {new_path}/cover.png -w 1200 -h 630')
-        
+            run(f'shot-scraper "{new_path}/{fname}" -o {new_path}/cover.png -w 1200 -h 630')
         return RedirectResponse(f'/{new_path}/{fname}')
+    except Exception as e:
+        shutil.rmtree(d, ignore_errors=True)
+        raise e
 
 def handle_http_error(e, full_url):
     """Handle HTTP errors during notebook fetch."""
