@@ -1,7 +1,5 @@
 format: 
   html:
-    embed-resources: true
-    self-contained-math: true
     toc: true
     include-before-body:
       - text: |
