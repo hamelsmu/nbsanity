@@ -286,7 +286,7 @@ async def serve_notebook(file_path, gist=False):
             run(f'quarto render {nm} --no-execute --to html --metadata-file {new_path}/nb.yml')
             shutil.copytree(d, str(new_path), dirs_exist_ok=True)
             update_title(f'{new_path}/{fname}')
-            run(f'shot-scraper {new_path}/{fname} -o {new_path}/cover.png -w 1120 -h 630')
+            run(f'shot-scraper {new_path}/{fname} -o {new_path}/cover.png -w 1200 -h 630')
         
         return RedirectResponse(f'/{new_path}/{fname}')
 

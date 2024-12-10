@@ -10,12 +10,16 @@ format:
           </div>
     include-in-header:
       - text: |
+          <meta property="og:image" content="{{image_path}}">
+          <meta property="og:site_name" content="nbsanity">
+          <meta property="og:image:type" content="image/png">
+          <meta property="og:image:width" content="1200">
+          <meta property="og:image:height" content="630">
+          <meta property="og:type" content="website">
+          <meta property="og:url" content="https://nbsanity.com">
           <meta property="og:title" content="{{{title}}}">
           <meta property="og:description" content="nbsanity: A modern way to view public Jupyter notebooks on GitHub">
-          <meta property="og:image" content="{{image_path}}">
+          <meta name="twitter:image" content="{{image_path}}>
           <meta name="twitter:card" content="summary_large_image">
-          <meta name="twitter:creator" content="@HamelHusain">
-          <meta name="twitter:site" content="@HamelHusain">
-          <meta property="og:image:height" content="630">
-          <meta property="og:image:width" content="1120">
-
+          <meta name="twitter:title" content="{{{title}}}">
+          <meta name="twitter:description" content="nbsanity: A modern way to view public Jupyter notebooks on GitHub">
