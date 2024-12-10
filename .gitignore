@@ -3,3 +3,5 @@ static/
 *.ipynb
 !scratch.ipynb
 .ipynb_checkpoints
+temp/
+tmp_notebooks/
