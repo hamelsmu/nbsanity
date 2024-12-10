@@ -321,6 +321,7 @@ async def serve_notebook(file_path, gist=False):
             title = get_title(f'{new_path}/{fname}')
             update_meta(f'{new_path}/{fname}', f'https://nbsanity.com/static/{hash_val}/cover.png', title)
             run(f'shot-scraper "{new_path}/{fname}" -o {new_path}/cover.png -w 1200 -h 630')
+        shutil.rmtree(d, ignore_errors=True)
         return RedirectResponse(f'/{new_path}/{fname}')
     except Exception as e:
         shutil.rmtree(d, ignore_errors=True)
