@@ -215,6 +215,35 @@ window.open(newUrl, '_blank');
     </html>
     '''
 
+def update_meta(html_path: str|Path, 
+                image_path:str,
+                title:str,
+                default_title: str = "nbsanity | Jupyter Notebook Viewer"):
+    """Update the meta tags in the HTML file."""
+    meta_tags=f"""<meta property="og:image" content="{image_path}">
+<meta property="og:site_name" content="nbsanity">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nbsanity.com">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="nbsanity: A modern way to view public Jupyter notebooks on GitHub">
+<meta name="twitter:image" content="{image_path}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="nbsanity: A modern way to view public Jupyter notebooks on GitHub">
+""".format(image_path=image_path, title=title)
+
+    doc = Path(html_path)
+    soup = bs(doc.read_text(encoding='utf-8'), 'html.parser')
+    head = soup.find('head')
+    new_html = bs(meta_tags, 'html.parser')
+    for element in new_html:
+        head.insert(0, element)
+    doc.write_text(str(soup), encoding='utf-8')
+
+
 def generate_error_content(file_path, gist=False):
     """Generate HTML content for errors."""
     back = f'<a href="https://github.com/{file_path}">Go back to GitHub</a>' if not gist else f'<a href="https://gist.github.com/{file_path}">Go back to Gist</a>'
@@ -240,14 +269,11 @@ def process_nb_yml(notebook_path, full_url, hash_val):
     output_path = os.path.join(notebook_path, 'nb.yml')
     with open(output_path, 'w') as f: f.write(filled)
 
-def update_title(html_path: str|Path, default_title: str = "nbsanity | Jupyter Notebook Viewer"):
+def get_title(html_path: str|Path, default_title: str = "nbsanity | Jupyter Notebook Viewer"):
     "Update the title in the HTML file."
     doc = Path(html_path)
     soup = bs(doc.read_text(encoding='utf-8'), 'html.parser')
-    title = soup.title.string if soup.title else default_title
-    if meta_tag := soup.find('meta', property='og:title'): meta_tag['content'] = title
-    if meta_tag := soup.find('meta', attrs={'name': 'twitter:title'}): meta_tag['content'] = title
-    doc.write_text(str(soup), encoding='utf-8')
+    return soup.title.string if soup.title else default_title
 
 def fix_nb(nbpath):
     "Mutate notebook to right version for Quarto."
@@ -286,7 +312,8 @@ async def serve_notebook(file_path, gist=False):
             process_nb_yml(new_path, full_url, hash_val)
             run(f'quarto render {nm} --no-execute --to html --metadata-file {new_path}/nb.yml')
             shutil.copytree(d, str(new_path), dirs_exist_ok=True)
-            update_title(f'{new_path}/{fname}')
+            title = get_title(f'{new_path}/{fname}')
+            update_meta(f'{new_path}/{fname}', f'https://nbsanity.com/static/{hash_val}/cover.png', title)
             run(f'shot-scraper {new_path}/{fname} -o {new_path}/cover.png -w 1200 -h 630')
         
         return RedirectResponse(f'/{new_path}/{fname}')
