@@ -48,6 +48,8 @@ async def render(file_path: str = ''):
     """Render the notebook or display instructions."""
     if not file_path:
         return HTMLResponse(content=generate_instruction_content())
+    if os.path.normpath(file_path).startswith(('/', '..')):
+        return HTMLResponse(content=generate_error_content(file_path))
     if file_path.startswith('gist/'): return await render_gist(file_path)
     if not file_path.endswith('.ipynb'):
         return HTMLResponse(content=generate_error_content(file_path))
