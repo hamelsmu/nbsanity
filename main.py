@@ -9,27 +9,10 @@ from fastcore.net import urlsave
 import urllib.error
 from rjsmin import jsmin
 from bs4 import BeautifulSoup as bs
-from starlette.responses import Response
-from starlette.staticfiles import StaticFiles
-
-
-class NoCacheStaticFiles(StaticFiles):
-    def __init__(self, *args, **kwargs):
-        self.cachecontrol = "max-age=0, no-cache, no-store, , must-revalidate"
-        self.pragma = "no-cache"
-        self.expires = "0"
-        super().__init__(*args, **kwargs)
-
-    def file_response(self, *args, **kwargs) -> Response:
-        resp = super().file_response(*args, **kwargs)
-        resp.headers.setdefault("Cache-Control", self.cachecontrol)
-        resp.headers.setdefault("Pragma", self.pragma)
-        resp.headers.setdefault("Expires", self.expires)
-        return resp
 
 app = FastAPI()
-app.mount("/static", NoCacheStaticFiles(directory="static"), name="static")
-app.mount("/assets", NoCacheStaticFiles(directory="assets"), name="assets")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 @app.get("/favicon.ico")
 async def favicon():
@@ -80,8 +63,6 @@ async def check_version(hash_val: str, url: str):
         
         nb = requests.get(url_with_cache_buster, headers=headers).content
         current_hash = hashlib.md5(nb).hexdigest()
-        print(current_hash, hash_val)
-        print(nb)
         return JSONResponse({"hasUpdate": current_hash != hash_val})
     except Exception as e:
         return JSONResponse({"hasUpdate": False})
@@ -296,12 +277,25 @@ def update_meta(html_path: str|Path,
         
         if (hasUpdate) {
             const existingBtn = document.getElementById('update-btn');
-            if (existingBtn) return;  // Don't add multiple buttons
+            if (existingBtn) return;
+            
+            const hostingDiv = document.getElementById('nbsanity-info');
+            if (!hostingDiv) return;
             
             const btn = document.createElement('button');
             btn.id = 'update-btn';
             btn.innerHTML = '🔄 New Version Available';
-            btn.style = 'position:fixed;top:10px;left:10px;z-index:9999;padding:8px 16px;background:#4a76d4;color:white;border:none;border-radius:4px;cursor:pointer;';
+            btn.style = `
+                margin-left: 10px;
+                padding: 2px 8px;
+                background: #4a76d4;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.9em;
+                vertical-align: middle;
+            `;
             btn.onclick = () => {
                 if (currentUrl.includes('gist.github.com')) {
                     window.location.href = currentUrl.replace('gist.github.com', 'nbsanity.com/gist');
@@ -309,7 +303,8 @@ def update_meta(html_path: str|Path,
                     window.location.href = currentUrl.replace('github.com', 'nbsanity.com');
                 }
             };
-            document.body.appendChild(btn);
+            const em = hostingDiv.querySelector('em');
+            em.appendChild(btn);
         }
     }
 
