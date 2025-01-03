@@ -324,13 +324,11 @@ def update_meta(html_path: str|Path,
     
     # Add meta tags
     new_html = bs(meta_tags, 'html.parser')
-    for element in new_html:
-        head.insert(0, element)
+    for element in new_html: head.insert(0, element)
     
     # Add update script
     script_tag = bs(update_script, 'html.parser')
     head.append(script_tag)
-    
     doc.write_text(str(soup), encoding='utf-8')
 
 
