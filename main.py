@@ -47,11 +47,10 @@ def git2raw(git_url: str):
 async def check_version(hash_val: str, url: str):
     """Check if there's a newer version of the notebook available"""
     try:
-        # Add timestamp to URL to bust cache
+        # Add uuid to URL to bust cache
         cache_buster = f"{'&' if '?' in url else '?'}_={uuid.uuid4()}"
         url_with_cache_buster = f"{git2raw(url)}{cache_buster}"
         
-        # Enhanced no-cache headers
         headers = {
             'Cache-Control': 'no-store',
             'Pragma': 'no-cache',
