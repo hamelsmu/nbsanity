@@ -3,7 +3,7 @@ import requests, os
 import nbformat
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse
+from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse, JSONResponse
 from fastcore.utils import run, mkdir, Path
 from fastcore.net import urlsave
 import urllib.error
@@ -22,9 +22,9 @@ def gist_raw(gist_url):
     # Extract gist ID from URL
     gist_id = gist_url.split('/')[-1]
     
-    # Get gist info from GitHub API
     api_url = f"https://api.github.com/gists/{gist_id}"
-    response = requests.get(api_url)
+    headers = {'Cache-Control': 'no-store', 'Pragma': 'no-cache'}
+    response = requests.get(api_url, headers=headers)
     data = response.json()
     
     # Check if 'files' or 'raw_url' is missing and raise HTTPError
@@ -42,6 +42,26 @@ def git2raw(git_url: str):
     if git_url.startswith('https://gist.githubusercontent.com') and 'raw' in git_url: return git_url
     return git_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
 
+
+@app.get("/api/check-version/{hash_val}")
+async def check_version(hash_val: str, url: str):
+    """Check if there's a newer version of the notebook available"""
+    try:
+        # Add uuid to URL to bust cache
+        cache_buster = f"{'&' if '?' in url else '?'}_={uuid.uuid4()}"
+        url_with_cache_buster = f"{git2raw(url)}{cache_buster}"
+        
+        headers = {
+            'Cache-Control': 'no-store',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+        }
+        
+        nb = requests.get(url_with_cache_buster, headers=headers).content
+        current_hash = hashlib.md5(nb).hexdigest()
+        return JSONResponse({"hasUpdate": current_hash != hash_val})
+    except Exception as e:
+        return JSONResponse({"hasUpdate": False})
 
 @app.get("/{file_path:path}")
 async def render(file_path: str = ''):
@@ -237,12 +257,77 @@ def update_meta(html_path: str|Path,
 <meta name="twitter:description" content="nbsanity: A modern way to view public Jupyter notebooks on GitHub">
 """.format(image_path=image_path, title=title)
 
+    # Updated update checker JavaScript
+    update_script = """
+    <script>
+    async function checkForUpdates() {
+        const currentUrl = document.querySelector('a[href*="github.com"]').href;
+        const currentPath = window.location.pathname;
+        const hash = currentPath.split('/')[2];
+        
+        const response = await fetch(`/api/check-version/${hash}?url=${encodeURIComponent(currentUrl)}`, {
+            cache: 'no-store'  // Prevent caching of the check-version request
+        });
+        const {hasUpdate} = await response.json();
+        console.log('hasUpdate', hasUpdate)
+        
+        if (hasUpdate) {
+            const existingBtn = document.getElementById('update-btn');
+            if (existingBtn) return;
+            
+            const hostingDiv = document.getElementById('nbsanity-info');
+            if (!hostingDiv) return;
+            
+            const btn = document.createElement('button');
+            btn.id = 'update-btn';
+            btn.innerHTML = '🔄 New Version Available';
+            btn.style = `
+                margin-left: 10px;
+                padding: 2px 8px;
+                background: #4a76d4;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.9em;
+                vertical-align: middle;
+            `;
+            btn.onclick = () => {
+                if (currentUrl.includes('gist.github.com')) {
+                    window.location.href = currentUrl.replace('gist.github.com', 'nbsanity.com/gist');
+                } else {
+                    window.location.href = currentUrl.replace('github.com', 'nbsanity.com');
+                }
+            };
+            const em = hostingDiv.querySelector('em');
+            em.appendChild(btn);
+        }
+    }
+
+    // Check on initial load
+    document.addEventListener('DOMContentLoaded', checkForUpdates);
+    
+    // Check on page show (back/forward navigation)
+    window.addEventListener('pageshow', (event) => {
+        // Check if page is loaded from cache
+        if (event.persisted) {
+            checkForUpdates();
+        }
+    });
+    </script>
+    """
+
     doc = Path(html_path)
     soup = bs(doc.read_text(encoding='utf-8'), 'html.parser')
     head = soup.find('head')
+    
+    # Add meta tags
     new_html = bs(meta_tags, 'html.parser')
-    for element in new_html:
-        head.insert(0, element)
+    for element in new_html: head.insert(0, element)
+    
+    # Add update script
+    script_tag = bs(update_script, 'html.parser')
+    head.append(script_tag)
     doc.write_text(str(soup), encoding='utf-8')
 
 
@@ -348,3 +433,4 @@ def escape_quarto_comments(lines):
 @app.get("/favicon.ico")
 async def favicon():
     return FileResponse("assets/icon.png")
+

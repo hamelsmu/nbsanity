@@ -4,6 +4,6 @@ format:
     toc: true
     include-before-body:
       - text: |
-          <div style="margin-top: 10px; margin-bottom: 10px;">
+          <div style="margin-top: 10px; margin-bottom: 10px;" id="nbsanity-info">
             <p><em>Hosted with <a href="https://nbsanity.com" target="_blank">nbsanity</a>. See source notebook <a href="{{full_url}}" target="_blank">on GitHub</a>.</em></p>
           </div>
