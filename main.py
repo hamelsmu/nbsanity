@@ -57,8 +57,6 @@ async def check_version(hash_val: str, url: str):
             'Cache-Control': 'no-store',
             'Pragma': 'no-cache',
             'Expires': '0',
-            'If-None-Match': None,  # Bypass ETag caching
-            'If-Modified-Since': None  # Bypass modification time caching
         }
         
         nb = requests.get(url_with_cache_buster, headers=headers).content
