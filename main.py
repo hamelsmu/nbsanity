@@ -406,14 +406,7 @@ async def serve_notebook(file_path, gist=False):
             update_meta(f'{new_path}/{fname}', f'https://nbsanity.com/static/{hash_val}/cover.png', title)
             run(f'shot-scraper "{new_path}/{fname}" -o {new_path}/cover.png -w 1200 -h 630')
         shutil.rmtree(d, ignore_errors=True)
-        return RedirectResponse(
-            f'/{new_path}/{fname}',
-            headers={
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0"
-            }
-        )
+        return RedirectResponse(f'/{new_path}/{fname}')
     
     except urllib.error.HTTPError as e:
         shutil.rmtree(new_path, ignore_errors=True)
