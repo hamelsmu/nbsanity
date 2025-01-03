@@ -24,7 +24,7 @@ def gist_raw(gist_url):
     
     # Get gist info from GitHub API with no-cache headers
     api_url = f"https://api.github.com/gists/{gist_id}"
-    headers = {'Cache-Control': 'no-cache', 'Pragma': 'no-cache'}
+    headers = {'Cache-Control': 'no-store', 'Pragma': 'no-cache'}
     response = requests.get(api_url, headers=headers)
     data = response.json()
     
@@ -54,7 +54,7 @@ async def check_version(hash_val: str, url: str):
         
         # Enhanced no-cache headers
         headers = {
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Cache-Control': 'no-store',
             'Pragma': 'no-cache',
             'Expires': '0',
             'If-None-Match': None,  # Bypass ETag caching
