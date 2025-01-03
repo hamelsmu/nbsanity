@@ -22,7 +22,6 @@ def gist_raw(gist_url):
     # Extract gist ID from URL
     gist_id = gist_url.split('/')[-1]
     
-    # Get gist info from GitHub API with no-cache headers
     api_url = f"https://api.github.com/gists/{gist_id}"
     headers = {'Cache-Control': 'no-store', 'Pragma': 'no-cache'}
     response = requests.get(api_url, headers=headers)
