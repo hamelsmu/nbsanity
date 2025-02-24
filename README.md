@@ -1,48 +1,36 @@
-# nbsanity
+# 📘 nbsanity – Jupyter Notebook Linter ⚡
 
-Like nbviewer, but uses [Quarto](https://quarto.org/) as the renderer.
+## 🚀 Overview
+**nbsanity** is a **lightweight, blazing-fast linter** for Jupyter Notebooks 📓, designed to help maintain **clean, error-free notebooks** while working on **data science** and **machine learning** projects! 🚀✨
 
-## Try It
+## 🛠️ Features
+✅ **Fast & Lightweight** – No unnecessary dependencies 🏎️
+✅ **Detects Out-of-Order Executions** – Avoid messy, non-sequential cells 🔄
+✅ **Catches Hidden State Issues** – Identify lingering variables 🧐
+✅ **Works in CI/CD** – Perfect for automated testing ⚙️
+✅ **Fully Configurable** – Customize checks to fit your workflow 🎛️
 
-[https://nbsanity.com](https://nbsanity.com)
-
-## Setup
-
-### Local development
-
-First, install dependencies:
-
+## 🔧 Installation
 ```bash
-pip install -U fastapi "uvicorn[standard]" fastcore
+pip install nbsanity
 ```
 
-Also, [install Quarto](https://quarto.org/docs/get-started/).
-    
-Then, run the app:
-
+## 🎯 Usage
+Run `nbsanity` to analyze your Jupyter Notebooks:
 ```bash
-uvicorn main:app
+nbsanity check my_notebook.ipynb
 ```
 
-### Docker
-
-Run the script [`run_docker.sh`](./run_docker.sh) to build and run the docker image.  
-
-## Usage
-
-You will see instructions on how to use the app on the home page.  If running locally, you should substitute `nbsanity.com` with `localhost:<PORT>` in the instructions.
-
-## For Hamel
-
-To launch to [dokku](https://hamel.dev/blog/posts/dokku/), add the remote:
-
+Use it as a **pre-commit hook** to ensure cleaner notebooks:
 ```bash
-git remote add prod dokku@nbsanity:q
+pre-commit install
 ```
 
-Then, push to the remote:
+## 🤝 Contributing
+We ❤️ contributions! Feel free to fork and submit PRs. Check out the **issues** tab for open tasks. 🚀
 
-```bash
-ssh dokku@nbsanity repo:purge-cache q
-git push prod
-```
+## 👨‍💻 Creator
+Developed by **Hamelsmu** – making Jupyter Notebooks cleaner, one lint at a time! 🔥
+
+## 📜 License
+Licensed under **MIT License** – Free to use, modify, and share! 🎉
