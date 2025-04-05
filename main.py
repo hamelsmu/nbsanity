@@ -1,7 +1,7 @@
 import hashlib, shutil, json, uuid
 import requests, os
 import nbformat
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse, JSONResponse
 from fastcore.utils import run, mkdir, Path
@@ -9,14 +9,69 @@ from fastcore.net import urlsave
 import urllib.error
 from rjsmin import jsmin
 from bs4 import BeautifulSoup as bs
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException
 
 app = FastAPI()
+
+# Custom middleware for adding cache headers to static assets
+class StaticCacheMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # Add cache headers for static assets
+        if request.url.path.startswith(("/static/", "/assets/")):
+            # Cache for 1 week (604800 seconds)
+            response.headers["Cache-Control"] = "public, max-age=604800, immutable"
+            response.headers["Expires"] = "604800"
+        
+        return response
+
+# Add this middleware before the StaticCacheMiddleware
+app.add_middleware(StaticCacheMiddleware)
+
+class NotFoundMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        try:
+            response = await call_next(request)
+            
+            # If a static asset is returning 404, return a transparent image instead
+            if (response.status_code == 404 and 
+                request.url.path.startswith("/static/") and 
+                any(request.url.path.endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.svg'])):
+                
+                # Return a fallback transparent 1x1 pixel image
+                return FileResponse(
+                    "assets/transparent.png",
+                    headers={
+                        "Cache-Control": "public, max-age=604800, immutable",
+                        "Expires": "604800"
+                    }
+                )
+            
+            return response
+        except Exception as e:
+            # Log exception if needed
+            raise e
+
+# Add this middleware before the StaticCacheMiddleware
+app.add_middleware(NotFoundMiddleware)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 @app.get("/favicon.ico")
 async def favicon():
-    return FileResponse("assets/icon.png")
+    return FileResponse(
+        "assets/icon.png",
+        headers={
+            "Cache-Control": "public, max-age=604800, immutable",
+            "Expires": "604800"
+        }
+    )
 
 def gist_raw(gist_url):
     # Extract gist ID from URL
@@ -120,6 +175,18 @@ window.open(newUrl, '_blank');
         <meta property="og:image:height" content="630" />
         <meta property="og:url" content="https://nbsanity.com" />
         <meta property="og:type" content="website" />
+        
+        <!-- Resource hints for commonly used assets -->
+        <link rel="preload" href="/assets/icon.png" as="image" type="image/png">
+        <link rel="preload" href="/assets/nbsanity.png" as="image" type="image/png">
+        <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" as="style">
+        
+        <!-- For notebooks that might be viewed afterwards -->
+        <link rel="prefetch" href="/static/site_libs/bootstrap/bootstrap.min.js">
+        <link rel="prefetch" href="/static/site_libs/bootstrap/bootstrap-icons.css">
+        <link rel="prefetch" href="/static/site_libs/quarto-html/quarto.js">
+        <link rel="prefetch" href="/static/site_libs/clipboard/clipboard.min.js">
+        
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
         <style>
             body {{
@@ -255,6 +322,13 @@ def update_meta(html_path: str|Path,
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="nbsanity: A modern way to view public Jupyter notebooks on GitHub">
+
+<!-- Resource hints for common assets -->
+<link rel="preload" href="/static/site_libs/bootstrap/bootstrap.min.js" as="script" crossorigin>
+<link rel="preload" href="/static/site_libs/bootstrap/bootstrap-icons.css" as="style">
+<link rel="preload" href="/static/site_libs/quarto-html/quarto.js" as="script">
+<link rel="preload" href="/static/site_libs/clipboard/clipboard.min.js" as="script">
+<link rel="preload" href="/static/site_libs/bootstrap/bootstrap.min.css" as="style">
 """.format(image_path=image_path, title=title)
 
     # Updated update checker JavaScript
@@ -367,6 +441,18 @@ def fix_nb(nbpath):
     nb = nbformat.read(nbpath, as_version=4)
     nbformat.write(nb, nbpath)
 
+def fix_image_paths(html_path: str|Path):
+    """Fix image paths in HTML to handle missing images gracefully"""
+    doc = Path(html_path)
+    soup = bs(doc.read_text(encoding='utf-8'), 'html.parser')
+    
+    # Add onerror handler to all images
+    for img in soup.find_all('img'):
+        if 'onerror' not in img.attrs:
+            img['onerror'] = "this.style.display='none'"
+    
+    doc.write_text(str(soup), encoding='utf-8')
+
 async def serve_notebook(file_path, gist=False):
     """Fetch, render, and serve the notebook."""
     d = Path('tmp_notebooks') / str(uuid.uuid4())
@@ -398,6 +484,7 @@ async def serve_notebook(file_path, gist=False):
             shutil.copytree(d, str(new_path), dirs_exist_ok=True)
             title = get_title(f'{new_path}/{fname}')
             update_meta(f'{new_path}/{fname}', f'https://nbsanity.com/static/{hash_val}/cover.png', title)
+            fix_image_paths(f'{new_path}/{fname}')
             run(f'shot-scraper "{new_path}/{fname}" -o {new_path}/cover.png -w 1200 -h 630')
         shutil.rmtree(d, ignore_errors=True)
         return RedirectResponse(f'/{new_path}/{fname}')
@@ -430,7 +517,61 @@ def escape_quarto_comments(lines):
             lines[idx] = '#' + line
     return lines
 
-@app.get("/favicon.ico")
-async def favicon():
-    return FileResponse("assets/icon.png")
+# Add before all other middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET"],  # Only allow GET requests
+    allow_headers=["*"],
+)
+
+# Add these exception handlers after creating the FastAPI app
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    return HTMLResponse(
+        content=f"""
+        <html>
+        <head><title>Error {exc.status_code}</title></head>
+        <body>
+        <h1>Error {exc.status_code}</h1>
+        <p>{exc.detail}</p>
+        <p><a href="/">Return to home</a></p>
+        </body>
+        </html>
+        """,
+        status_code=exc.status_code
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return HTMLResponse(
+        content=f"""
+        <html>
+        <head><title>Invalid Request</title></head>
+        <body>
+        <h1>Invalid Request</h1>
+        <p>This URL doesn't support the request method or has invalid parameters.</p>
+        <p><a href="/">Return to home</a></p>
+        </body>
+        </html>
+        """,
+        status_code=405
+    )
+
+@app.route("/{path:path}", methods=["POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+async def method_not_allowed(path: str):
+    """Handle unsupported HTTP methods for any path"""
+    return HTMLResponse(
+        content="""
+        <html>
+        <head><title>Method Not Allowed</title></head>
+        <body>
+        <h1>Method Not Allowed</h1>
+        <p>This service only supports GET requests.</p>
+        <p><a href="/">Return to home</a></p>
+        </body>
+        </html>
+        """,
+        status_code=405
+    )
 
